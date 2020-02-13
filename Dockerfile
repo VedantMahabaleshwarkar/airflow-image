@@ -14,10 +14,10 @@ ENV TERM linux
 
 # Airflow
 ARG AIRFLOW_VERSION=1.10.9
-ARG AIRFLOW_USER_HOME=/usr/local/airflow
+ARG AIRFLOW_HOME=/usr/local/airflow
 ARG AIRFLOW_DEPS=""
 ARG PYTHON_DEPS=""
-ENV AIRFLOW_HOME=${AIRFLOW_USER_HOME}
+ENV AIRFLOW_HOME=${AIRFLOW_HOME}
 
 # Define en_US.
 ENV LANGUAGE en_US.UTF-8
@@ -54,7 +54,7 @@ RUN set -ex \
     && sed -i 's/^# en_US.UTF-8 UTF-8$/en_US.UTF-8 UTF-8/g' /etc/locale.gen \
     && locale-gen \
     && update-locale LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 \
-    && useradd -ms /bin/bash -d ${AIRFLOW_USER_HOME} airflow \
+    && useradd -ms /bin/bash -d ${AIRFLOW_HOME} airflow \
     && pip install -U pip setuptools wheel \
     && pip install pytz \
     && pip install pyOpenSSL \
@@ -76,13 +76,22 @@ RUN set -ex \
         /usr/share/doc-base
 
 COPY script/entrypoint.sh /entrypoint.sh
-COPY config/airflow.cfg ${AIRFLOW_USER_HOME}/airflow.cfg
+COPY config/airflow.cfg ${AIRFLOW_HOME}/airflow.cfg
 
-RUN chown -R airflow: ${AIRFLOW_USER_HOME}
+RUN chown -R airflow: ${AIRFLOW_HOME}
+RUN mkdir -p ${AIRFLOW_HOME}/logs \
+    && mkdir -p ${AIRFLOW_HOME}/dags \
+    && chown -R airflow: ${AIRFLOW_HOME} \
+    && chgrp -R 0 ${AIRFLOW_HOME} \
+    && chmod -R g=u ${AIRFLOW_HOME} \
+    && chmod g=u /etc/passwd
 
 EXPOSE 8080 5555 8793
 
+
+WORKDIR ${AIRFLOW_HOME}
+ENV AIRFLOW_HOME = ${AIRFLOW_HOME}
 USER airflow
-WORKDIR ${AIRFLOW_USER_HOME}
+
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["webserver"]
