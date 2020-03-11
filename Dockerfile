@@ -95,4 +95,3 @@ USER airflow
 
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["webserver"]
-CMD ["initdb"]

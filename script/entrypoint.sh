@@ -124,12 +124,12 @@ case "$1" in
     ;;
   worker|scheduler)
     # Give the webserver time to run initdb.
+    exec airflow initdb
     sleep 10
-    exec airflow "$@"
     ;;
   flower)
-    sleep 10
     exec airflow "$@"
+    sleep 10
     ;;
   version)
     exec airflow "$@"
